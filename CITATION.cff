@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "Sheaf Transformers"
+abstract: "Sheaf-theoretic diagnostics and layers for Transformer attention: cohomological hallucination detection, spectral generalization bounds, and coherence-enforcing gluing layers."
+authors:
+  - family-names: "Machhidan"
+    given-names: "Ayman"
+version: "0.2.0"
+date-released: "2025-01-01"
+license: MIT
+url: "https://github.com/ayman-machhidan/sheaf-transformers"
+repository-code: "https://github.com/ayman-machhidan/sheaf-transformers"
+keywords:
+  - sheaf theory
+  - transformers
+  - attention
+  - cohomology
+  - hallucination detection
+  - spectral theory

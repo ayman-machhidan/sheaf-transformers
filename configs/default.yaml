@@ -1,0 +1,22 @@
+# Default hyperparameters for S-Transformer experiments
+model:
+  name: gpt2
+  n_heads: 12
+  d_model: 768
+
+cohomology:
+  threshold: 0.01      # ε for attention neighborhood
+  alpha: 0.1           # cohomological regularizer weight
+
+spectral:
+  beta: 0.01           # spectral gap regularizer weight
+  lanczos_iters: 20    # iterations for eigenvalue computation
+
+sparsification:
+  target_ratio: 0.1    # target edge retention ratio
+  epsilon: 0.05        # spectral gap tolerance
+
+experiment:
+  batch_size: 16
+  max_samples: 817     # full TruthfulQA
+  seed: 42

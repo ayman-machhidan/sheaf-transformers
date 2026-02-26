@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sheaf Transformers — Dashboard</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --border: #334155;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --green: #4ade80;
+    --red: #f87171;
+    --yellow: #fbbf24;
+    --purple: #a78bfa;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .header {
+    text-align: center;
+    padding: 2rem 1rem;
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border-bottom: 1px solid var(--border);
+  }
+  .header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.25rem; }
+  .header h1 span { color: var(--accent); }
+  .header p { color: var(--muted); font-size: 0.95rem; }
+  .header .author { color: var(--purple); margin-top: 0.5rem; font-size: 0.85rem; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+  .loading {
+    text-align: center; padding: 4rem; color: var(--muted);
+    font-size: 1.2rem;
+  }
+  .loading .spinner {
+    display: inline-block; width: 40px; height: 40px;
+    border: 3px solid var(--border); border-top-color: var(--accent);
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+    margin-bottom: 1rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.5rem; position: relative;
+  }
+  .card.full { grid-column: 1 / -1; }
+  .card h2 {
+    font-size: 1.1rem; margin-bottom: 1rem; display: flex;
+    align-items: center; gap: 0.5rem;
+  }
+  .card h2 .badge {
+    font-size: 0.7rem; background: var(--accent); color: var(--bg);
+    padding: 2px 8px; border-radius: 100px; font-weight: 600;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  th { text-align: left; color: var(--muted); font-weight: 500;
+       padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); }
+  td { padding: 0.5rem 0.75rem; border-bottom: 1px solid #1e293b; }
+  tr:hover td { background: rgba(56, 189, 248, 0.05); }
+  .mono { font-family: 'Cascadia Code', 'Fira Code', monospace; }
+  .val-green { color: var(--green); }
+  .val-red { color: var(--red); }
+  .val-yellow { color: var(--yellow); }
+  .val-accent { color: var(--accent); }
+  .bar-container {
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .bar {
+    height: 20px; border-radius: 4px; transition: width 0.5s ease;
+    min-width: 2px;
+  }
+  .bar.blue { background: linear-gradient(90deg, #38bdf8, #818cf8); }
+  .bar.green { background: linear-gradient(90deg, #4ade80, #22d3ee); }
+  .bar.red { background: linear-gradient(90deg, #f87171, #fb923c); }
+  .bar.purple { background: linear-gradient(90deg, #a78bfa, #f472b6); }
+
+  .auroc-grid { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+  .auroc-item {
+    text-align: center; padding: 1rem 1.5rem; border-radius: 10px;
+    background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+    min-width: 140px;
+  }
+  .auroc-item .label { font-size: 0.75rem; color: var(--muted); margin-bottom: 0.25rem; }
+  .auroc-item .value { font-size: 2rem; font-weight: 700; font-family: monospace; }
+  .auroc-item.ours { border-color: var(--accent); }
+  .auroc-item.ours .value { color: var(--accent); }
+  .auroc-item.fail .value { color: var(--red); }
+  .auroc-item.ok .value { color: var(--green); }
+
+  canvas { width: 100% !important; height: 250px !important; }
+
+  .insight {
+    background: rgba(56, 189, 248, 0.08); border-left: 3px solid var(--accent);
+    padding: 0.75rem 1rem; border-radius: 0 8px 8px 0; margin-top: 1rem;
+    font-size: 0.85rem; color: var(--muted);
+  }
+  .insight strong { color: var(--text); }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div class="header">
+  <h1><span>Sheaf</span> Transformers Dashboard</h1>
+  <p>Sheaf-Theoretic Foundations for Transformer Architectures</p>
+  <p class="author">Ayman Machhidan</p>
+</div>
+
+<div class="container" id="app">
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div>Computing all 7 demonstrations...</div>
+    <div style="font-size: 0.8rem; margin-top: 0.5rem; color: #64748b;">
+      This takes ~20 seconds (400 samples for AUROC benchmark)
+    </div>
+  </div>
+  <div id="content" style="display:none;">
+    <!-- Demo 1 -->
+    <div class="grid">
+      <div class="card full">
+        <h2>Demo 1: Coherence Spectrum <span class="badge">H_coh</span></h2>
+        <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 350px;">
+            <table>
+              <thead><tr><th>Scenario</th><th>Variance</th><th>H_coh</th><th>H_coh_frac</th></tr></thead>
+              <tbody id="demo1-table"></tbody>
+            </table>
+          </div>
+          <div style="flex: 1; min-width: 300px;">
+            <canvas id="demo1-chart"></canvas>
+          </div>
+        </div>
+        <div class="insight">
+          <strong>Key:</strong> H_coh = 0 for coherent heads (mathematical guarantee), scales monotonically with incoherence.
+          Entropy is <strong>constant</strong> across all scenarios because it measures attention sharpness, not head agreement.
+        </div>
+      </div>
+
+      <!-- Demo 7: AUROC -->
+      <div class="card full">
+        <h2>Demo 7: AUROC Benchmark <span class="badge">vs Baselines</span></h2>
+        <div class="auroc-grid" id="auroc-grid"></div>
+        <div class="insight">
+          <strong>Result:</strong> H_coh and Variance both detect incoherence perfectly (AUROC=1.0).
+          Attention Entropy <strong>fails</strong> (AUROC~0.5) because it measures the wrong quantity.
+          H_coh's advantage: structural decomposition + gluing + spectral gap + mathematical framework.
+        </div>
+      </div>
+
+      <!-- Demo 2: Gluing -->
+      <div class="card">
+        <h2>Demo 2: Gluing Layer <span class="badge">Theorem 6.3</span></h2>
+        <canvas id="demo2-chart"></canvas>
+        <div class="insight">
+          <strong>100% cocycle reduction</strong> on all 20 trials. The gluing layer finds the
+          minimum-energy correction via pseudoinverse.
+        </div>
+      </div>
+
+      <!-- Demo 3: Spectral Gap -->
+      <div class="card">
+        <h2>Demo 3: Spectral Gap <span class="badge">Theorem 5.3</span></h2>
+        <table>
+          <thead><tr><th>Attention</th><th>Gap &gamma;</th><th>Bound</th></tr></thead>
+          <tbody id="demo3-table"></tbody>
+        </table>
+        <div class="insight">
+          <strong>Dense attention</strong> gives the largest spectral gap and tightest generalization bound.
+        </div>
+      </div>
+
+      <!-- Demo 4: Consensus -->
+      <div class="card">
+        <h2>Demo 4: Multi-Agent Consensus <span class="badge">Theorem 9.4</span></h2>
+        <canvas id="demo4-chart"></canvas>
+        <div class="insight">
+          Energy drops from <strong>504 to ~0</strong> in 22 rounds — exponential convergence.
+        </div>
+      </div>
+
+      <!-- Demo 5: Memory -->
+      <div class="card">
+        <h2>Demo 5: Memory Diffusion <span class="badge">Theorem 8.4</span></h2>
+        <canvas id="demo5-chart"></canvas>
+        <div class="insight">
+          Sheaf diffusion drives disagreement energy to <strong>~0</strong> — narrative coherence achieved.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const COLORS = {
+  blue: '#38bdf8', green: '#4ade80', red: '#f87171',
+  yellow: '#fbbf24', purple: '#a78bfa', pink: '#f472b6',
+};
+
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.borderColor = '#334155';
+Chart.defaults.font.family = "'Segoe UI', system-ui, sans-serif";
+
+async function main() {
+  try {
+    const res = await fetch('/api/data');
+    const data = await res.json();
+
+    if (data.error) {
+      document.getElementById('loading').innerHTML =
+        `<div style="color:#f87171;">Error: ${data.error}</div>
+         <pre style="text-align:left;font-size:0.7rem;color:#64748b;max-width:600px;margin:1rem auto;overflow:auto;">${data.traceback||''}</pre>`;
+      return;
+    }
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+    renderAll(data);
+  } catch (e) {
+    document.getElementById('loading').innerHTML =
+      `<div style="color:#f87171;">Failed to load: ${e.message}</div>`;
+  }
+}
+
+function renderAll(data) {
+  renderDemo1(data.demo1);
+  renderDemo2(data.demo2);
+  renderDemo3(data.demo3);
+  renderDemo4(data.demo4);
+  renderDemo5(data.demo5);
+  renderDemo7(data.demo7);
+}
+
+function renderDemo1(rows) {
+  const tbody = document.getElementById('demo1-table');
+  const maxH = Math.max(...rows.map(r => r.H_coh));
+  rows.forEach(r => {
+    const pct = maxH > 0 ? (r.H_coh / maxH * 100) : 0;
+    const color = r.H_coh === 0 ? 'val-green' : (r.H_coh > maxH * 0.5 ? 'val-red' : 'val-yellow');
+    tbody.innerHTML += `<tr>
+      <td>${r.name}</td>
+      <td class="mono">${r.variance.toFixed(4)}</td>
+      <td class="mono ${color}">${r.H_coh.toFixed(2)}</td>
+      <td class="mono">${(r.H_coh_frac * 100).toFixed(1)}%</td>
+    </tr>`;
+  });
+
+  new Chart(document.getElementById('demo1-chart'), {
+    type: 'bar',
+    data: {
+      labels: rows.map(r => r.name.split('(')[0].trim()),
+      datasets: [
+        { label: 'H_coh', data: rows.map(r => r.H_coh),
+          backgroundColor: COLORS.blue + '99', borderColor: COLORS.blue, borderWidth: 1 },
+        { label: 'Variance x 100', data: rows.map(r => r.variance * 100),
+          backgroundColor: COLORS.purple + '66', borderColor: COLORS.purple, borderWidth: 1 },
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'top' } },
+      scales: { y: { beginAtZero: true, title: { display: true, text: 'Value' } } },
+    }
+  });
+}
+
+function renderDemo2(rows) {
+  new Chart(document.getElementById('demo2-chart'), {
+    type: 'bar',
+    data: {
+      labels: rows.map(r => `#${r.trial}`),
+      datasets: [{
+        label: '||cocycle|| before',
+        data: rows.map(r => r.before),
+        backgroundColor: COLORS.red + '88',
+        borderColor: COLORS.red,
+        borderWidth: 1,
+      }, {
+        label: '||cocycle|| after',
+        data: rows.map(r => r.after),
+        backgroundColor: COLORS.green + '88',
+        borderColor: COLORS.green,
+        borderWidth: 1,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { position: 'top' } },
+      scales: { y: { beginAtZero: true } },
+    }
+  });
+}
+
+function renderDemo3(rows) {
+  const tbody = document.getElementById('demo3-table');
+  const minBound = Math.min(...rows.map(r => r.bound));
+  rows.forEach(r => {
+    const best = r.bound <= minBound + 0.01;
+    tbody.innerHTML += `<tr>
+      <td>${r.name}</td>
+      <td class="mono val-accent">${r.gap.toFixed(4)}</td>
+      <td class="mono ${best ? 'val-green' : ''}">${r.bound.toFixed(1)}</td>
+    </tr>`;
+  });
+}
+
+function renderDemo4(rows) {
+  // Sample every few points for readability
+  const sampled = rows.filter((_, i) => i % 3 === 0 || i === rows.length - 1);
+  new Chart(document.getElementById('demo4-chart'), {
+    type: 'line',
+    data: {
+      labels: sampled.map(r => r.round),
+      datasets: [{
+        label: 'Energy',
+        data: sampled.map(r => r.energy),
+        borderColor: COLORS.yellow,
+        backgroundColor: COLORS.yellow + '22',
+        fill: true, tension: 0.3, pointRadius: 2,
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: { type: 'logarithmic', title: { display: true, text: 'Energy (log)' },
+             min: 0.0000001 },
+        x: { title: { display: true, text: 'Round' } },
+      },
+      plugins: { legend: { display: false } },
+    }
+  });
+}
+
+function renderDemo5(rows) {
+  const sampled = rows.filter((_, i) => i % 5 === 0 || i === rows.length - 1);
+  new Chart(document.getElementById('demo5-chart'), {
+    type: 'line',
+    data: {
+      labels: sampled.map(r => r.iter),
+      datasets: [{
+        label: 'Disagreement Energy',
+        data: sampled.map(r => r.energy),
+        borderColor: COLORS.green,
+        backgroundColor: COLORS.green + '22',
+        fill: true, tension: 0.3, pointRadius: 2,
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: { type: 'logarithmic', title: { display: true, text: 'Energy (log)' },
+             min: 0.0000001 },
+        x: { title: { display: true, text: 'Iteration' } },
+      },
+      plugins: { legend: { display: false } },
+    }
+  });
+}
+
+function renderDemo7(auroc) {
+  const grid = document.getElementById('auroc-grid');
+  const items = [
+    { label: 'H_coh (Ours)', value: auroc.H_coh, cls: 'ours' },
+    { label: 'Variance', value: auroc.Variance, cls: 'ok' },
+    { label: 'Entropy', value: auroc.Entropy, cls: 'fail' },
+    { label: 'Random', value: auroc.Random, cls: 'fail' },
+  ];
+  items.forEach(it => {
+    grid.innerHTML += `<div class="auroc-item ${it.cls}">
+      <div class="label">${it.label}</div>
+      <div class="value">${it.value.toFixed(4)}</div>
+      <div class="label">AUROC</div>
+    </div>`;
+  });
+}
+
+main();
+</script>
+</body>
+</html>
