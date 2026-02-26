@@ -1,0 +1,79 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sheaf-transformers"
+version = "0.2.0"
+description = "Sheaf-theoretic diagnostics and layers for Transformer attention"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+authors = [
+    {name = "Ayman Machhidan"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Typing :: Typed",
+]
+keywords = ["transformers", "sheaf-theory", "cohomology", "hallucination-detection", "attention"]
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+]
+
+[project.optional-dependencies]
+hf = ["torch>=2.0", "transformers>=4.30"]
+dev = ["pytest>=7.0", "pytest-cov>=4.0"]
+bench = ["datasets>=2.14", "tqdm>=4.65"]
+viz = ["matplotlib>=3.5"]
+all = [
+    "torch>=2.0",
+    "transformers>=4.30",
+    "datasets>=2.14",
+    "tqdm>=4.65",
+    "matplotlib>=3.5",
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+
+[project.scripts]
+sheaf-transformers = "sheaf_transformers.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/ayman-machhidan/sheaf-transformers"
+Repository = "https://github.com/ayman-machhidan/sheaf-transformers"
+Issues = "https://github.com/ayman-machhidan/sheaf-transformers/issues"
+
+[tool.setuptools.packages.find]
+include = ["sheaf_transformers*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+]
+
+[tool.coverage.run]
+source = ["sheaf_transformers"]
+omit = ["sheaf_transformers/visualization.py"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.",
+    "if HAS_TORCH",
+    "raise ImportError",
+]

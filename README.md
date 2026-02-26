@@ -2,7 +2,8 @@
 
 [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-26%20passing-brightgreen.svg)](#tests)
+[![Tests](https://img.shields.io/badge/tests-68%20passing-brightgreen.svg)](#tests)
+[![CI](https://github.com/ayman-machhidan/sheaf-transformers/actions/workflows/ci.yml/badge.svg)](https://github.com/ayman-machhidan/sheaf-transformers/actions/workflows/ci.yml)
 
 **Sheaf-Theoretic Foundations for Transformer Architectures** — a framework that recasts attention heads as sections of a cellular sheaf and provides computable cohomological invariants for hallucination detection, spectral generalization bounds, and coherence-enforcing layers.
 
@@ -123,7 +124,7 @@ pip install -e ".[dev]"
 pytest tests/ -v
 ```
 
-26 tests covering cohomology computation, spectral analysis, and edge cases.
+68 tests covering cohomology computation, spectral analysis, layers, pipeline, CLI, and edge cases.
 
 ---
 

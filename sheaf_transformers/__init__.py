@@ -24,5 +24,14 @@ except Exception:
 from .metrics.cohomology import CohomologyComputer
 from .metrics.spectral import SheafLaplacian
 from .metrics.eigenvalue_stats import EigenvalueStatistics
-from .layers.gluing import GluingLayer
+from .layers.gluing import GluingLayer, GluingOutput
 from .pipeline import SheafExperiment
+
+__all__ = [
+    "CohomologyComputer",
+    "SheafLaplacian",
+    "EigenvalueStatistics",
+    "GluingLayer",
+    "GluingOutput",
+    "SheafExperiment",
+]
