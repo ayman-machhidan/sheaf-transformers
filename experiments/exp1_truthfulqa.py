@@ -61,8 +61,7 @@ def main() -> None:
         print("No samples processed.")
         return
 
-    print("
-Summary")
+    print("\nSummary")
     print(f"  mean   : {scores.mean():.6g}")
     print(f"  median : {np.median(scores):.6g}")
     print(f"  p90    : {np.quantile(scores, 0.90):.6g}")
