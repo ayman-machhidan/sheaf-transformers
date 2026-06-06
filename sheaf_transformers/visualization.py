@@ -13,6 +13,21 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 
 
+def _compute_auroc(labels: np.ndarray, scores: np.ndarray) -> float:
+    """Compute AUROC without external dependencies."""
+    labels = np.asarray(labels)
+    scores = np.asarray(scores, dtype=float)
+    if len(np.unique(labels)) < 2:
+        return 0.5
+    pos = scores[labels == 1]
+    neg = scores[labels == 0]
+    total = len(pos) * len(neg)
+    if total == 0:
+        return 0.5
+    count = sum((p > n) + 0.5 * (p == n) for p in pos for n in neg)
+    return float(count / total)
+
+
 def _get_plt():
     """Lazy import matplotlib."""
     try:
@@ -122,8 +137,7 @@ def plot_layer_hcoh_heatmap(
     aurocs = []
     for ell in range(n_layers):
         col = matrix[:, ell]
-        from experiments.exp1_hallucination_benchmark import compute_auroc
-        aurocs.append(compute_auroc(sorted_labels, col))
+        aurocs.append(_compute_auroc(sorted_labels, col))
 
     ax2.barh(range(n_layers), aurocs, color="#3498db", edgecolor="white")
     ax2.set_xlabel("AUROC", fontsize=12)

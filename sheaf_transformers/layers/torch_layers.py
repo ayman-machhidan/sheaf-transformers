@@ -216,12 +216,23 @@ class SheafGluingLayer(nn.Module):
             h_coh = torch.dot(cocycle, cocycle)
             h_coh_batch.append(h_coh)
 
-            # Simple correction: move each head toward the mean
-            mean_output = ho.mean(dim=0, keepdim=True)  # (1, N, D)
-            correction = ho - mean_output  # (H, N, D)
-            # Scale correction by H_coh-dependent factor
-            scale = torch.sigmoid(h_coh / (D * N + 1))
-            corrections_batch.append(correction * scale)
+            # Build delta_0 and solve least-squares for minimum-norm correction
+            D_0 = H * N * D
+            pairs = sorted(overlaps.keys())
+            D_1 = sum(len(overlaps[p]) * D for p in pairs)
+            delta_0 = torch.zeros(D_1, D_0, device=head_outputs.device)
+            row = 0
+            for (h, k) in pairs:
+                idx = overlaps[(h, k)]
+                for pos, ti in enumerate(idx):
+                    for dd in range(D):
+                        r = row + pos * D + dd
+                        delta_0[r, h * N * D + ti * D + dd] = 1.0
+                        delta_0[r, k * N * D + ti * D + dd] = -1.0
+                row += len(idx) * D
+            x_ls = torch.linalg.lstsq(delta_0, cocycle).solution
+            correction = x_ls.view(H, N, D)
+            corrections_batch.append(correction)
 
         h_coh_tensor = torch.stack(h_coh_batch)
         corrections = torch.stack(corrections_batch)

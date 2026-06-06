@@ -35,5 +35,5 @@ class SheafExperiment:
     def full_analysis(self):
         cohom = self.run_cohomology()
         for r in cohom:
-            print(f"Layer {r[layer]:2d}: H_coh={r[H_coh]:.6g} | q_obs={r[q_obs]}")
+            print(f"Layer {r['layer']:2d}: H_coh={r['H_coh']:.6g} | q_obs={r['q_obs']}")
         return {"cohomology": cohom}

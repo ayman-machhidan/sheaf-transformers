@@ -45,10 +45,18 @@ class SheafLaplacian:
         B, _ = self.construct_coboundary(attention_matrices, value_matrices)
         return (B.T @ B).toarray()
 
-    def compute_spectral_gap(self, L, k=5):
-        eigenvalues = np.sort(linalg.eigvalsh(L))[:k]
-        gap = eigenvalues[1] - eigenvalues[0] if len(eigenvalues) > 1 else 0.0
-        return eigenvalues, gap
+    def compute_spectral_gap(self, L, k=10):
+        """Compute spectral gap = smallest nonzero eigenvalue of L_F.
+
+        L_F = B^T B is PSD with a d-dimensional kernel (constant sections).
+        The spectral gap gamma = lambda_1 (first nonzero eigenvalue).
+        """
+        eigenvalues = np.sort(linalg.eigvalsh(L))
+        scale = max(abs(eigenvalues[-1]), 1.0)
+        tol = 1e-8 * scale
+        nonzero_eigs = eigenvalues[eigenvalues > tol]
+        gap = float(nonzero_eigs[0]) if len(nonzero_eigs) > 0 else 0.0
+        return eigenvalues[:min(k, len(eigenvalues))], gap
 
     def compute_sheaf_energy(self, s, attention_matrices, value_matrices):
         """E = ||B_F s||^2 = s^T L_F s."""
